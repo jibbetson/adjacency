@@ -7,42 +7,78 @@
 #    http://shiny.rstudio.com/
 #
 
+# Load packages and functions
 library(shiny)
+library(tidyverse)
+library(plotly)
 
-# Define UI for application that draws a histogram
+# Define any additional custom functions that are needed  
+# These code chunks run once when app is first loaded
+
+
+
+
+# Define UI for application that visualizes adjacency matrices as heatmaps
 ui <- fluidPage(
   
   # Application title
-  titlePanel("Old Faithful Geyser Data"),
+  titlePanel("Adjacency"),
   
-  # Sidebar with a slider input for number of bins 
+  # Sidebar with several user input options
   sidebarLayout(
     sidebarPanel(
-      sliderInput("bins",
-                  "Number of bins:",
-                  min = 1,
-                  max = 50,
-                  value = 30)
+      # help box
+      # file input widget
+      # Input: Select a file ----
+      fileInput("file1", "Choose data file",
+                multiple = FALSE,
+                accept = c("text/csv",
+                           "text/comma-separated-values,text/plain",
+                           ".csv")),
+      
+      # heatmap color scheme input (from a list)
+      selectInput("select", label = h3("Select heatmap color"), 
+                  choices = list("Viridis" = 1, "Red-Green" = 2, "Greys" = 3), 
+                  selected = 1),
+      
+      # Horizontal line ----
+      tags$hr(),
+
+      # A set of processing steps as a CheckboxGroup
+      checkboxGroupInput("checkGroup", label = h3("Data processing steps"), 
+                         choices = list("Step 1" = 1, "Step 2" = 2, "Step 3" = 3),
+                         selected = 1),
+
+      # Horizontal line ----
+      tags$hr(),
+      
+      # a threshold value input as a slider
+      sliderInput("threshold", label = h3("Threshold"), 
+                  min = 0, max = 1, value = 0.5)
+      ),
+    
+      # Horizontal line ----
+      tags$hr()
     ),
     
-    # Show a plot of the generated distribution
+    # Main results panel with a table and three heatmaps
     mainPanel(
-      plotOutput("distPlot")
-    )
+      # a table of the head of the file contents
+      
+      # a heatmap of the raw data
+      
+      # a heatmap of the processed data
+      
+      # a heatmap of the threshold data
+    
   )
 )
 
-# Define server logic required to draw a histogram
+
+# Define server logic required to draw the plots
 server <- function(input, output) {
   
-  output$distPlot <- renderPlot({
-    # generate bins based on input$bins from ui.R
-    x    <- faithful[, 2] 
-    bins <- seq(min(x), max(x), length.out = input$bins + 1)
-    
-    # draw the histogram with the specified number of bins
-    hist(x, breaks = bins, col = 'darkgray', border = 'white')
-  })
+
 }
 
 # Run the application 
