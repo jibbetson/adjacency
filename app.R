@@ -10,6 +10,7 @@
 # Load packages and functions
 library(shiny)
 library(tidyverse)
+library(lattice)
 #library(plotly)
 
 # Define any additional custom functions that are needed  
@@ -39,64 +40,57 @@ plot_heatmap.lattice <- function(dt, z, title = NULL,
 }
 
 
-
-
 # Define UI for application that visualizes adjacency matrices as heatmaps
 ui <- fluidPage(
   
   # Application title
   titlePanel("Adjacency"),
   
-  # Sidebar with several user input options
-  sidebarLayout(
-    sidebarPanel(
-      # help box
-      # file input widget
-      # Input: Select a file ----
+  # Top row: data file
+  fluidRow(
+    column(width = 4,
+      # file input widget: Select a file ----
       fileInput("file1", "Choose data file",
                 multiple = FALSE,
                 accept = c("text/csv",
                            "text/comma-separated-values,text/plain",
-                           ".csv")),
-      
-      # heatmap color scheme input (from a list)
-      selectInput("select", label = h3("Select heatmap color"), 
-                  choices = list("Viridis" = 1, "Red-Green" = 2, "Greys" = 3), 
-                  selected = 1),
-      
-      # Horizontal line ----
-      tags$hr(),
-
-      # A set of processing steps as a CheckboxGroup
-      checkboxGroupInput("checkGroup", label = h3("Data processing steps"), 
-                         choices = list("Step 1" = 1, "Step 2" = 2, "Step 3" = 3),
-                         selected = 1),
-
-      # Horizontal line ----
-      tags$hr(),
-      
-      # a threshold value input as a slider
-      sliderInput("threshold", label = h3("Threshold"), 
-                  min = 0, max = 1, value = 0.5)
-      ),
-    
-      # Horizontal line ----
-      tags$hr()
+                           ".csv")
+                )
     ),
-    
-    # Main results panel with a table and three heatmaps
-    mainPanel(
-      
+    column(width = 8,
       # a table of the head of the file contents
-      tableOutput("contents"),
-      
-      # a heatmap of the raw data
-      plotOutput("plot1"),
-      
-      # a heatmap of the processed data
-      
-      # a heatmap of the threshold data
+      tableOutput("contents")
+    )
+  ),
+  
+  # 2nd row: heatmap of user selected data
+  fluidRow(
+    column(width = 4, wellPanel(
+      # heatmap color scheme input (from a list)
+      selectInput("select_var", label = h4("Choose variable"), 
+                  choices = list("Signal")),
+      # heatmap color scheme input (from a list)
+      selectInput("select_col1", label = h4("Select heatmap color"), 
+                  choices = list("Viridis" = 1, "Red-Green" = 2, "Greys" = 3), 
+                  selected = 1)
+    )),
+    column(width = 8,
+      # a heatmap plot
+      plotOutput("plot1")
+    )
+  ),
+
+  # 3rd row: heatmap of adjacency data
+  fluidRow(
+    column(width = 4, wellPanel(
+      # a threshold value input as a slider
+      sliderInput("threshold", label = h4("Set threshold for adjacency"), 
+                  min = 0, max = 1000, value = 500)
+    )),
+    column(width = 8,
+      # a heatmap of the thresholded data
       plotOutput("plot2")
+    )
   )
 )
 
@@ -119,17 +113,16 @@ server <- function(input, output) {
 
   # draw a heatmap of the raw data
   output$plot1 <- renderPlot({
-    plot_heatmap.lattice(dataset(), "Signal")
+    plot_heatmap.lattice(dataset(), input$select_var)
   })
   
   # draw a heatmap of the passing data
   output$plot2 <- renderPlot({
-    newdataset <- dataset() %>%
-                  mutate(pass = (dataset()$Signal > input$threshold))
-    plot_heatmap.lattice(newdataset, "pass")
+    df <- dataset() %>%
+      mutate(pass = (dataset()[, input$select_var] > input$threshold))
+    plot_heatmap.lattice(df, "pass")
    })
   
-
 }
 
 # Run the application 
